@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistem Nilai Zero Trust</title>
+    <link rel="stylesheet" href="/ui/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Sistem Nilai Zero Trust</h1>
+          <p>Gateway: http://127.0.0.1:3000</p>
+        </div>
+        <div class="header-actions">
+          <button id="btnResetSeed" class="secondary">Reset data seed</button>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="panel">
+          <h2>1. Login</h2>
+          <div id="accountButtons" class="quick-accounts"></div>
+          <form id="loginForm" class="stack">
+            <label>
+              Username
+              <input id="username" type="text" value="dosen1" />
+            </label>
+            <label>
+              Password
+              <input id="password" type="password" value="dosen123" />
+            </label>
+            <label>
+              Device ID
+              <input id="deviceId" type="text" value="DEV-DOSEN1-01" />
+            </label>
+            <button type="submit">Login</button>
+          </form>
+
+          <div class="token-card">
+            <h3>Token aktif</h3>
+            <div class="token-block">
+              <label>Access Token</label>
+              <textarea id="accessTokenBox" rows="4" readonly></textarea>
+            </div>
+            <div class="token-block">
+              <label>Refresh Token</label>
+              <textarea id="refreshTokenBox" rows="2" readonly></textarea>
+            </div>
+            <div class="token-meta">
+              <div>
+                <span>Payload JWT</span>
+                <pre id="jwtPayload"></pre>
+              </div>
+              <div>
+                <span>Masa berlaku</span>
+                <div id="tokenTimer">-</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>2. Manajemen sesi</h2>
+          <div class="session-actions">
+            <button id="btnRefreshToken" class="secondary">Refresh</button>
+            <button id="btnLogout" class="secondary danger">Logout</button>
+            <button id="btnDeadToken" class="secondary">Paksa token rusak</button>
+            <button id="btnNewSession" class="secondary">Sesi baru</button>
+            <button id="btnDeleteSession" class="secondary danger">Hapus sesi</button>
+          </div>
+
+          <div id="sessionList" class="session-list"></div>
+
+          <div class="session-active-box">
+            <h3>Aktif saat ini</h3>
+            <div id="activeSessionInfo">Belum ada sesi aktif</div>
+          </div>
+        </section>
+
+        <section class="panel wide-panel">
+          <h2>3. Penguji request manual</h2>
+          <div class="manual-form">
+            <label>
+              Preset endpoint
+              <select id="presetSelect">
+                <option value="">Pilih preset...</option>
+                <option value="POST /auth/login">POST /auth/login</option>
+                <option value="POST /auth/refresh">POST /auth/refresh</option>
+                <option value="POST /auth/logout">POST /auth/logout</option>
+                <option value="POST /auth/service">POST /auth/service</option>
+                <option value="GET /nilai">GET /nilai</option>
+                <option value="PUT /nilai/1">PUT /nilai/:id</option>
+                <option value="POST /kelas/1/finalisasi">POST /kelas/:id/finalisasi</option>
+                <option value="GET /transkrip/2210001">GET /transkrip/:nim</option>
+                <option value="POST /transkrip/sinkron">POST /transkrip/sinkron</option>
+              </select>
+            </label>
+            <label>
+              Method
+              <select id="methodSelect">
+                <option>GET</option>
+                <option>POST</option>
+                <option>PUT</option>
+                <option>DELETE</option>
+                <option>PATCH</option>
+              </select>
+            </label>
+            <label class="grow">
+              Path
+              <input id="manualPath" type="text" value="/nilai" />
+            </label>
+            <label>
+              Query
+              <input id="manualQuery" type="text" placeholder="kelas_id=1" />
+            </label>
+            <label>
+              Authorization
+              <input id="manualAuth" type="text" placeholder="Bearer ..." />
+            </label>
+            <label>
+              X-Device-ID
+              <input id="manualDevice" type="text" placeholder="DEV-DOSEN1-01" />
+            </label>
+            <label class="grow">
+              Body JSON
+              <textarea id="manualBody" rows="5" placeholder='{"nilai": 95}'></textarea>
+            </label>
+          </div>
+          <div class="manual-actions">
+            <button id="btnManualRequest">Kirim request</button>
+          </div>
+          <div id="manualResponse" class="response-box neutral">
+            <div class="response-header">Status: -</div>
+            <pre>Belum ada respons</pre>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>4. Fungsional per role</h2>
+
+          <div class="role-section">
+            <h3>Mahasiswa</h3>
+            <div class="inline-form">
+              <button id="btnLoadNilaiMahasiswa">Daftar nilai saya</button>
+              <input id="nimSelfCheck" type="text" value="2210001" placeholder="NIM" />
+              <button id="btnTranskripSelf">Lihat transkrip</button>
+            </div>
+            <div id="studentView" class="result-list"></div>
+          </div>
+
+          <div class="role-section">
+            <h3>Dosen</h3>
+            <div class="inline-form">
+              <input id="kelasIdDosen" type="text" value="1" placeholder="kelas_id" />
+              <button id="btnLoadNilaiDosen">Lihat kelas</button>
+            </div>
+            <div id="dosenView" class="result-list"></div>
+          </div>
+
+          <div class="role-section">
+            <h3>Admin</h3>
+            <div class="inline-form">
+              <input id="nimAdmin" type="text" value="2210002" placeholder="NIM" />
+              <button id="btnTranskripAdmin">Lihat transkrip</button>
+            </div>
+            <div id="adminView" class="result-list"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>5. Jalankan semua skenario</h2>
+          <button id="btnRunScenarios">Jalankan semua skenario</button>
+          <div id="scenarioResults" class="scenario-table-wrap"></div>
+        </section>
+
+        <section class="panel wide-panel">
+          <h2>6. Penampil audit log</h2>
+          <div class="inline-form">
+            <input id="auditSubject" type="text" placeholder="Filter subjek" />
+            <select id="auditResultFilter">
+              <option value="">Semua hasil</option>
+              <option value="allow">allow</option>
+              <option value="deny">deny</option>
+            </select>
+            <button id="btnRefreshAudit">Refresh</button>
+          </div>
+          <div id="auditTableWrap" class="audit-table-wrap"></div>
+        </section>
+
+        <section class="panel">
+          <h2>7. Token service</h2>
+          <div class="inline-form stack">
+            <input id="serviceClientId" type="text" value="service-nilai" />
+            <input id="serviceClientSecret" type="text" value="service-nilai-secret-praktikum" />
+            <button id="btnRequestServiceToken">Minta token service</button>
+          </div>
+          <div id="serviceTokenBox" class="token-preview"></div>
+        </section>
+
+        <section class="panel">
+          <h2>8. Uji akses langsung ke service</h2>
+          <button id="btnServiceDirectTest">Tampilkan perintah curl</button>
+          <pre id="serviceDirectTestOutput" class="command-box">Belum ada perintah.</pre>
+        </section>
+
+        <section class="panel">
+          <h2>9. Reset data seed</h2>
+          <p>Gunakan terminal di folder project:</p>
+          <pre class="command-box">python seed.py</pre>
+          <button id="btnCopySeedCommand">Salin perintah</button>
+        </section>
+      </main>
+    </div>
+
+    <script src="/ui/app.js"></script>
+  </body>
+</html>
